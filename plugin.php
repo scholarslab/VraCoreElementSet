@@ -16,6 +16,8 @@ add_plugin_hook('initialize', 'VraCoreElementSetPlugin::initialize');
 add_plugin_hook('define_acl', 'VraCoreElementSetPlugin::define_acl');
 add_plugin_hook('admin_theme_header', 'VraCoreElementSetPlugin::admin_header');
 add_filter('admin_navigation_main', 'VraCoreElementSetPlugin::admin_navigation');
+add_filter('define_action_contexts', 'VraCoreElementSetPlugin::vra_core_action_context');
+add_filter('define_response_contexts', 'VraCoreElementSetPlugin::vra_core_response_context');
 
 class VraCoreElementSetPlugin
 {
@@ -59,9 +61,9 @@ class VraCoreElementSetPlugin
 		    ),
 			array(
 		    	'name'           => 'Date',
-		        'description'    => 'Date or range of dates associated with the creation, design, production, presentation, performance, construction, or alteration, etc. of the work or image. Dates may be expressed as free text or numerical.',
+		        'description'    => 'Date or range of dates associated with the creation, design, production, presentation, performance, construction, or alteration, etc. of the work or image. Dates may be expressed as free text or numerical.  In format yyyy-mm-dd yyyy-mm-dd.',
 		        'record_type_id' => 2,
-		        'data_type_id'   => 2
+		        'data_type_id'   => 3
 		    ),
 			array(
 		    	'name'           => 'Description',
@@ -136,13 +138,13 @@ class VraCoreElementSetPlugin
 		        'data_type_id'   => 2
 		    ),
 		    array(
-		    	'name'           => 'Text Reference',
+		    	'name'           => 'Textref',
 		        'description'    => 'Contains the name of a related textual reference and any type of unique identifier that text assigns to a Work or Collection that is independent of any repository.',
 		        'record_type_id' => 2,
 		        'data_type_id'   => 2
 		    ),
 			array(
-		    	'name'           => 'Worktype',
+		    	'name'           => 'Work Type',
 		        'description'    => 'Identifies the specific type of WORK, COLLECTION, or IMAGE being described in the record.',
 		        'record_type_id' => 2,
 		        'data_type_id'   => 2
@@ -196,5 +198,21 @@ class VraCoreElementSetPlugin
 			echo '<link rel="stylesheet" href="' . html_escape(css('vra_core_element_set_main')) . '" />';
 			//echo js('generic_xml_import_main');
 	    }
+	}
+	function vra_core_action_context($context, $controller)
+	{
+	    if ($controller instanceof ItemsController) {
+	        $context['browse'][] = 'vra-core';
+	    }
+	 
+	    return $context;
+	}
+	
+	function vra_core_response_context($context)
+	{
+	    $context['vra-core'] = array('suffix'  => 'vra-core', 
+	                            'headers' => array('Content-Type' => 'text/xml'));
+	 
+	    return $context;
 	}
 }
