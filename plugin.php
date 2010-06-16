@@ -41,7 +41,7 @@ class VraCoreElementSetPlugin
 	    	'description' => 'VRA Core standard for artistic pieces and cultural heritage artifacts'
 		);
 		$elements = array(
-		    array(
+			array(
 		    	'name'           => 'Title',
 		        'description'    => 'The title or identifying phrase given to a Work or an Image.',
 		        'record_type_id' => 2,
@@ -144,7 +144,7 @@ class VraCoreElementSetPlugin
 		        'data_type_id'   => 2
 		    ),
 			array(
-		    	'name'           => 'Work Type',
+		    	'name'           => 'Worktype',
 		        'description'    => 'Identifies the specific type of WORK, COLLECTION, or IMAGE being described in the record.',
 		        'record_type_id' => 2,
 		        'data_type_id'   => 2

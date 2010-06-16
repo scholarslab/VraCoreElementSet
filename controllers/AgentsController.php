@@ -88,8 +88,9 @@ class VraCoreElementSet_AgentsController extends Omeka_Controller_Action
 				try{		
 					$db = get_db();								
 					$db->insert('vra_core_element_set_agent', $data); 
-					$this->redirect->goto('browse');   
 					$this->flashSuccess('Agent successfully created.');			
+					$this->redirect->goto('browse');
+					
 				} catch (Exception $e) {
 					$this->flashError($e->getMessage());
         		}
@@ -112,14 +113,14 @@ class VraCoreElementSet_AgentsController extends Omeka_Controller_Action
 			$agentId = $this->_getParam('id');
 			$db = get_db();
             $agent = $db->getTable('VraCoreElementSet_Agent')->find($agentId);
+            $entries = $db->getTable('ElementText')->findBySql('text = ?', array($agentId));
             
-            // Permission check
-            if ($this->isAllowed('deleteAll') 
-                || ($this->isAllowed('deleteSelf') && $agent->wasAddedBy($user))) {
-                $agent->delete();
-                $this->flashSuccess('The item was successfully deleted!');
-                $this->redirect->goto('browse');
-            }
+			$agent->delete();
+			foreach ($entries as $entry){
+                $entry->delete();
+               }
+			$this->flashSuccess('The item was successfully deleted!');
+			$this->redirect->goto('browse'); 
         }
         
         $this->_forward('forbidden');
@@ -160,7 +161,8 @@ class VraCoreElementSet_AgentsController extends Omeka_Controller_Action
 		
 		//Earliest Date
 		$agentEarliestDate = new Zend_Form_Element_Text('vra_core_agent_earliest_date');
-		$agentEarliestDate->setLabel('Earliest Date');
+		$agentEarliestDate->setLabel('Date of Birth');
+		$agentEarliestDate->addValidator(new Zend_Validate_Date);
 		if ($agent != NULL){
 			$agentEarliestDate->setValue($agent['earliest_date']);
 		}
@@ -168,7 +170,8 @@ class VraCoreElementSet_AgentsController extends Omeka_Controller_Action
 		
 		//Latest Date
 		$agentLatestDate = new Zend_Form_Element_Text('vra_core_agent_latest_date');
-		$agentLatestDate->setLabel('Latest Date');
+		$agentLatestDate->setLabel('Date of Death');
+		$agentLatestDate->addValidator(new Zend_Validate_Date);
 		if ($agent != NULL){
 			$agentLatestDate->setValue($agent['latest_date']);
 		}

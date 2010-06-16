@@ -13,10 +13,10 @@
  **/
 class ItemVraCoreXml
 {
-    private $_vraElements = array('Title', 'Agent', 'Cultural Context', 'Date', 'Description',
+    private $_vraElements = array('Agent', 'Cultural Context', 'Date', 'Description',
     							'Inscription', 'Location', 'Material', 'Measurements', 'Relation',
     							'Rights', 'Source', 'State Edition', 'Style Period', 'Subject', 
-    							'Technique', 'Textref', 'Work Type');
+    							'Technique', 'Textref', 'Title', 'Worktype');
 
     public function recordToVraCoreXml($item)
     {
@@ -27,25 +27,24 @@ class ItemVraCoreXml
         // Iterate through the VRA Core.
         foreach ($this->_vraElements as $elementName) {
             if ($text = item('VRA Core', $elementName, array('all'=>true, 'no_escape'=>true))) {
-            	$xml .= "\n" . '<' . str_replace(' ', '', strtolower($elementName)) . 'Set>';
+            	$nameParts = explode(' ', $elementName);
+            	$newName = strtolower($nameParts[0]) . $nameParts[1];
+            	$xml .= "\n" . '<' . $newName . 'Set>';
             	foreach ($text as $k => $v) {
 					if (!empty($v)) {
-						$xml .= "\n" . '<' . str_replace(' ', '', strtolower($elementName)) . '>';
+						$xml .= "\n" . '<' . $newName . '>';
 						if ($elementName == 'Inscription' || $elementName == 'Rights'){
 							$xml .= '<text>' . xml_escape($v) . '</text>';
 						}
-						elseif ($elementName == 'Location' || $elementName == 'Source' || $elementName == 'Textref'){
+						elseif ($elementName == 'Location' || $elementName == 'Source' || $elementName == 'Textref' || $elementName == 'State Edition'){
 							$xml .= '<name>' . xml_escape($v) . '</name>';
 						}
 						elseif ($elementName == 'Subject'){
 							$xml .= '<term>' . xml_escape($v) . '</term>';
 						}
 						elseif ($elementName == 'Agent'){
-							$agent = $at->find($k + 1);
-							$xml .= '<name>' . xml_escape($agent['name']) . '</name>';
-							if ($agent['role'] != NULL){
-								$xml .= '<role>' . xml_escape($agent['role']) . '</role>';
-							}
+							$agent = $at->find($v);
+							$xml .= '<name>' . xml_escape($agent['name']) . '</name>';							
 							if ($agent['culture'] != NULL){
 								$xml .= '<culture>' . xml_escape($agent['culture']) . '</culture>';
 							}
@@ -58,6 +57,9 @@ class ItemVraCoreXml
 									$xml .= '<latestDate>' . xml_escape($agent['latest_date']) . '</latestDate>';
 								}
 								$xml .= '</dates>';
+							}
+							if ($agent['role'] != NULL){
+								$xml .= '<role>' . xml_escape($agent['role']) . '</role>';
 							}
 						}
 						elseif ($elementName == 'Date'){
@@ -73,11 +75,11 @@ class ItemVraCoreXml
 						else{
 							$xml .= xml_escape($v);
 						}
-						$xml .= '</' . str_replace(' ', '', strtolower($elementName)) . '>';
+						$xml .= '</' . $newName . '>';
 					}
             	}
 
-            	$xml .= '</' . str_replace(' ', '', strtolower($elementName)) . 'Set>';
+            	$xml .= '</' . $newName . 'Set>';
                 /*foreach ($text as $k => $v) {
                     if (!empty($v)) {
                         $xml .= "\n" . '<' . str_replace(' ', '', strtolower($elementName)) . 'Set>' 
