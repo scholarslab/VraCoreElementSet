@@ -43,22 +43,12 @@ class VraCoreElementSet_AgentsController extends Omeka_Controller_Action
     }
     
 	public function editAction(){
-        // Get all the element sets that apply to the item.
-        //$this->view->elementSets = $this->_getItemElementSets();
             $db = get_db();
             $agentId = $this->_getParam('id');
             $agent = $db->getTable('VraCoreElementSet_Agent')->find($agentId);
             $form = $this->agentForm($agent);
             $this->view->id = $agentId;
             $this->view->form = $form;
-            // If the user cannot edit any given item. Check if they can edit 
-            // this specific item
-           /* if ($this->isAllowed('editAll') 
-                || ($this->isAllowed('editSelf') && $item->wasAddedBy($user))) {
-                return parent::editAction();    
-            }*/
-        
-        //$this->forbiddenAction();
     }
 
     public function updateAction() 
