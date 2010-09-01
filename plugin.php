@@ -209,8 +209,8 @@ function vra_core_after_save_item($item){
 					$value = preg_replace('/\s\s+/', ' ', $vraElementText['text']);
 				}	
 				$db->insert('element_texts', array('record_id'=>$item->id, 'record_type_id'=>2, 'element_id'=>$dcElement->id, 'text'=>$value));
-			}		
-		
+			}	
+		}
 	}
 }
 
