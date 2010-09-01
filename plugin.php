@@ -167,7 +167,9 @@ function vra_core_uninstall()
 	$elementSet = get_db()->getTable('ElementSet')->findByName('VRA Core');
 	$elementSet->delete();
 }	
-
+/**
+ * Execute VRA Core to Dublin Core metadata crosswalk
+ */
 function vra_core_after_save_item($item){
 	$db = get_db();
 	$hasVraElements = false;
@@ -177,7 +179,7 @@ function vra_core_after_save_item($item){
 						'Measurements'=>'Format', 'Technique'=>'Format', 'Inscription'=>'Description',
 						'Description'=>'Description', 'Relation'=>'Relation', 'Rights'=>'Rights');
 	
-	
+	//test for existing VRA Core fields
 	foreach ($crosswalk as $vraField=>$dcField){
 		$texts = $item->getElementTextsByElementNameAndSetName($vraField, 'VRA Core');
 		if ($texts[0]->text != NULL && $texts[0]->text != ''){
@@ -185,11 +187,8 @@ function vra_core_after_save_item($item){
 		}
 	}
 	
-	//$itemElementTexts = $db->getTable()
-	
+	//only execute crosswalk of VRA Core fields exist for an item
 	if ($hasVraElements == true){	
-
-		
 		foreach ($crosswalk as $vraField=>$dcField){
 			//get elements for current DC field to avoid inserting duplicates
 			$dcElement = $item->getElementByNameAndSetName($dcField, 'Dublin Core');					
@@ -198,7 +197,6 @@ function vra_core_after_save_item($item){
 			
 			//remove DC element texts to avoid duplication on VRA Core changes. this is experimental and as a result prohibits separate DC entry
 			foreach ($dcElementTexts as $dcElementText){
-				//$texts[] = $dcElementText['text'];
 				$dcElementText->delete();			
 			}
 			
@@ -209,20 +207,11 @@ function vra_core_after_save_item($item){
 					$value = preg_replace('/\s\s+/', ' ', $db->getTable('VraCoreElementSet_Agent')->find($vraElementText['text'])->name);
 				} else {
 					$value = preg_replace('/\s\s+/', ' ', $vraElementText['text']);
-				}
-				//if the value isn't already in the DC element texts
-					//if (!in_array($value, $texts)){
-					//addTextForElement doesn't work for some reason??
-					//$item->addTextForElement($dcElement, $value);				
-					$db->insert('element_texts', array('record_id'=>$item->id, 'record_type_id'=>2, 'element_id'=>$dcElement->id, 'text'=>$value));
-				//}
+				}	
+				$db->insert('element_texts', array('record_id'=>$item->id, 'record_type_id'=>2, 'element_id'=>$dcElement->id, 'text'=>$value));
 			}		
-		}
+		
 	}
-	/*$myFile = "/tmp/test.txt";
-	$fh = fopen($myFile, 'w') or die("can't open file");
-	fwrite($fh, var_dump($currentVraCoreElementTexts));
-	fclose($fh);	*/
 }
 
 function vra_core_initialize()
