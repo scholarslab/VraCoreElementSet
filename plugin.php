@@ -170,17 +170,25 @@ function vra_core_uninstall()
 
 function vra_core_after_save_item($item){
 	$db = get_db();
-	$currentVraElements = $item->getElementsBySetName('VRA Core');
-	$currentVraCoreElementTexts = array();
-	foreach ($currentVraElements as $element){
-		$currentVraCoreElementTexts[] = $element->text;
+	$hasVraElements = false;
+	//crosswalk mapping from http://www.getty.edu/research/conducting_research/standards/intrometadata/crosswalks.html		
+	$crosswalk = array('Worktype'=>'Type', 'Subject'=>'Subject', 'Title'=>'Title', 'Agent'=>'Creator',
+						'Date'=>'Date', 'Location'=>'Coverage', 'Style Period'=>'Subject',
+						'Measurements'=>'Format', 'Technique'=>'Format', 'Inscription'=>'Description',
+						'Description'=>'Description', 'Relation'=>'Relation', 'Rights'=>'Rights');
+	
+	
+	foreach ($crosswalk as $vraField=>$dcField){
+		$texts = $item->getElementTextsByElementNameAndSetName($vraField, 'VRA Core');
+		if ($texts[0]->text != NULL && $texts[0]->text != ''){
+			$hasVraElements = true;
+		}
 	}
-	if (!empty($currentVraCoreElementTexts)){	
-		//crosswalk mapping from http://www.getty.edu/research/conducting_research/standards/intrometadata/crosswalks.html		
-		$crosswalk = array('Worktype'=>'Type', 'Subject'=>'Subject', 'Title'=>'Title', 'Agent'=>'Creator',
-							'Date'=>'Date', 'Location'=>'Coverage', 'Style Period'=>'Subject',
-							'Measurements'=>'Format', 'Technique'=>'Format', 'Inscription'=>'Description',
-							'Description'=>'Description', 'Relation'=>'Relation', 'Rights'=>'Rights');
+	
+	//$itemElementTexts = $db->getTable()
+	
+	if ($hasVraElements == true){	
+
 		
 		foreach ($crosswalk as $vraField=>$dcField){
 			//get elements for current DC field to avoid inserting duplicates
@@ -194,8 +202,7 @@ function vra_core_after_save_item($item){
 				$dcElementText->delete();			
 			}
 			
-			$vraElement = $item->getElementByNameAndSetName($vraField, 'VRA Core');
-			$vraElementTexts = $item->getTextsByElement($vraElement);
+			$vraElementTexts = $item->getElementTextsByElementNameAndSetName($vraField, 'VRA Core');
 			
 			foreach ($vraElementTexts as $vraElementText){
 				if ($vraField == 'Agent'){
@@ -212,10 +219,10 @@ function vra_core_after_save_item($item){
 			}		
 		}
 	}
-	$myFile = "/tmp/test.txt";
+	/*$myFile = "/tmp/test.txt";
 	$fh = fopen($myFile, 'w') or die("can't open file");
-	fwrite($fh, $currentVraCoreElementTexts);
-	fclose($fh);	
+	fwrite($fh, var_dump($currentVraCoreElementTexts));
+	fclose($fh);	*/
 }
 
 function vra_core_initialize()

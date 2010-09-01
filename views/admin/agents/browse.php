@@ -13,7 +13,7 @@
         ?>
 	<?php if ($count == 0): ?>
 	    <div id="no-items">
-	    <p>There are no items in the archive yet.
+	    <p>There are no agents yet.
 	    
 	    <?php  if (get_acl()->checkUserPermission('VraCoreElementSet_Agents', 'index')): ?>
 	          Why don&#8217;t you <?php echo link_to('agents', 'create', 'add one'); ?>?</p>
