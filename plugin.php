@@ -172,20 +172,16 @@ function vra_core_uninstall()
  */
 function vra_core_after_save_item($item){
 	$db = get_db();
-	$hasVraElements = false;
+	
+	$vraCoreElements = $item->getElementsBySetName('VRA Core');
 	//crosswalk mapping from http://www.getty.edu/research/conducting_research/standards/intrometadata/crosswalks.html		
 	$crosswalk = array('Worktype'=>'Type', 'Subject'=>'Subject', 'Title'=>'Title', 'Agent'=>'Creator',
 						'Date'=>'Date', 'Location'=>'Coverage', 'Style Period'=>'Subject',
 						'Measurements'=>'Format', 'Technique'=>'Format', 'Inscription'=>'Description',
 						'Description'=>'Description', 'Relation'=>'Relation', 'Rights'=>'Rights');
 	
-	//test for existing VRA Core fields
-	foreach ($crosswalk as $vraField=>$dcField){
-		$texts = $item->getElementTextsByElementNameAndSetName($vraField, 'VRA Core');
-		if ($texts[0]->text != NULL && $texts[0]->text != ''){
-			$hasVraElements = true;
-		}
-	}
+	
+	$hasVraElements = has_vra_core_element_texts($item);
 	
 	//only execute crosswalk of VRA Core fields exist for an item
 	if ($hasVraElements == true){	
@@ -213,6 +209,7 @@ function vra_core_after_save_item($item){
 		}
 	}
 }
+
 
 function vra_core_initialize()
 {
@@ -258,4 +255,63 @@ function vra_core_response_context($context)
     $context['vra-core'] = array('suffix'  => 'vra-core', 
                             'headers' => array('Content-Type' => 'text/xml')); 
     return $context;
+}
+/*********************************************
+ * Public functions
+ *********************************************/
+    
+//test to see if an item has any VRA Core element texts (used in after_save_item plugin hook as well as a public function
+function has_vra_core_element_texts($item){
+	$vraCoreElements = $item->getElementsBySetName('VRA Core');
+	//test for existing VRA Core fields
+	foreach ($vraCoreElements as $vraCoreElement){
+		$texts = $item->getElementTextsByElementNameAndSetName($vraCoreElement->name, 'VRA Core');
+		if ($texts[0]->text != NULL && $texts[0]->text != ''){
+			return true;
+		}
+	}
+	return false;
+}
+/***
+ * Display the VRA Core metadata in the same fashion that DC metadata is displayed, 
+ * except showing Agent information from the table correctly
+ ***/
+function vra_core_show_item_metadata($item){
+	$vraCoreElements = $item->getElementsBySetName('VRA Core');
+	$showEmptyElements = get_option('show_empty_elements');
+	foreach ($vraCoreElements as $vraCoreElement){
+		$elementTexts = $item->getTextsByElement($vraCoreElement);
+		if ($showEmptyElements == false){
+			if (isset($elementTexts[0])){				
+				$html .= '<div id="vra-core-' . strtolower($vraCoreElement->name) . '" class="element">';
+				$html .= '<h3>' . $vraCoreElement->name . '</h3>';
+				$html .= render_vra_core_element_text($elementTexts, $vraCoreElement->name);
+				$html .= '</div>';
+			}
+		} else if ($showEmptyElements == true){
+			$html .= '<div id="vra-core-' . strtolower($vraCoreElement->name) . '" class="element">';
+			$html .= '<h3>' . $vraCoreElement->name . '</h3>';
+			$html .= isset($elementTexts[0]) ? render_vra_core_element_text($elementTexts, $vraCoreElement->name) : '<div class="element-text-empty">[no text]</div>';	
+			$html .= '</div>';
+		}		
+	}
+	return $html;
+}
+
+function render_vra_core_element_text($elementTexts, $elementName){
+	$db = get_db();
+	foreach ($elementTexts as $elementText){
+		if ($elementName == 'Agent'){
+			$agent = $db->getTable('VraCoreElementSet_Agent')->find($elementText->text);
+			$html .= '<div class="element-text"><ul><li><b>' . $agent->name . '</b></li>';
+			$html .= !empty($agent->culture) ? '<li>Culture: ' . $agent->culture . '</li>' : '';
+			$html .= !empty($agent->role) ? '<li>Role: ' . $agent->role . '</li>' : '';
+			$html .= !empty($agent->earliest_date) ? '<li>Earliest Date: ' . $agent->earliest_date . '</li>' : '';
+			$html .= !empty($agent->latest_date) ? '<li>Latest Date: ' . $agent->latest_date . '</li>': '';
+			$html .= '</ul></div>';
+		} else{
+			$html .= '<div class="element-text">' . $elementText->text . '</div>';
+		}	
+	}
+	return $html;
 }
