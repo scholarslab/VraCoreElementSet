@@ -22,8 +22,12 @@ class ItemVraCoreXml
     {
     	$db = get_db();
 		$at = $db->getTable('VraCoreElementSet_Agent');
+		
+		//get VRA Core identifier and write the first one as the work @refid
+		$identifiers = item('VRA Core', 'Identifier', array('all'=>true, 'no_escape'=>true));
+		$refid = $identifiers[0];
     
-        $xml = "\n" . '<work refid="' . $item['id'] . '" source="' . settings('site_title') . '">';
+        $xml = "\n" . '<work id="' . $item['id'] . '" source="' . settings('site_title') . '" refid="' . $refid . '">';
         // Iterate through the VRA Core.
         foreach ($this->_vraElements as $elementName) {
             if ($text = item('VRA Core', $elementName, array('all'=>true, 'no_escape'=>true))) {
@@ -78,14 +82,7 @@ class ItemVraCoreXml
 						$xml .= '</' . $newName . '>';
 					}
             	}
-
             	$xml .= '</' . $newName . 'Set>';
-                /*foreach ($text as $k => $v) {
-                    if (!empty($v)) {
-                        $xml .= "\n" . '<' . str_replace(' ', '', strtolower($elementName)) . 'Set>' 
-                            . xml_escape($v) . '</' . str_replace(' ', '', strtolower($elementName)) . 'Set>';
-                    }
-                }*/
             }
         }
         $xml .= "\n" . '</work>';

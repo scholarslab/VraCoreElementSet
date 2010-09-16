@@ -148,7 +148,13 @@ function vra_core_install()
 	        'description'    => 'Identifies the specific type of WORK, COLLECTION, or IMAGE being described in the record.',
 	        'record_type_id' => 2,
 	        'data_type_id'   => 2
-	    )
+	    ),
+	    array(
+	    	'name'           => 'Identifier',
+	        'description'    => 'Equivalent of the refid attribute that holds the local unique identifier for the work described by the element set',
+	        'record_type_id' => 2,
+	        'data_type_id'   => 2
+	    ),
 	);
 	insert_element_set($elementSetMetadata, $elements);
 }
@@ -178,7 +184,7 @@ function vra_core_after_save_item($item){
 	$crosswalk = array('Worktype'=>'Type', 'Subject'=>'Subject', 'Title'=>'Title', 'Agent'=>'Creator',
 						'Date'=>'Date', 'Location'=>'Coverage', 'Style Period'=>'Subject',
 						'Measurements'=>'Format', 'Technique'=>'Format', 'Inscription'=>'Description',
-						'Description'=>'Description', 'Relation'=>'Relation', 'Rights'=>'Rights');
+						'Description'=>'Description', 'Relation'=>'Relation', 'Rights'=>'Rights', 'Identifier'=>'Identifier');
 	
 	
 	$hasVraElements = has_vra_core_element_texts($item);
@@ -245,21 +251,91 @@ function vra_core_admin_header($request)
 function vra_core_action_context($context, $controller)
 {
     if ($controller instanceof ItemsController) {
-        $context['browse'][] = 'vra-core';
+		$context['show'][] = 'vra-core-xml';
     } 
     return $context;
 }
 
 function vra_core_response_context($context)
 {
-    $context['vra-core'] = array('suffix'  => 'vra-core', 
+    $context['vra-core-xml'] = array('suffix'  => 'vra-core', 
                             'headers' => array('Content-Type' => 'text/xml')); 
     return $context;
 }
 /*********************************************
  * Public functions
  *********************************************/
+function render_vra_core_xml($item){
+	return 'test';
+	$db = get_db();
+		$at = $db->getTable('VraCoreElementSet_Agent');
+		
+		//get VRA Core identifier and write the first one as the work @refid
+		$identifiers = item('VRA Core', 'Identifier', array('all'=>true, 'no_escape'=>true));
+		$refid = $identifiers[0];
     
+        $xml = "\n" . '<work id="' . $item['id'] . '" source="' . settings('site_title') . '" refid="' . $refid . '">';
+        // Iterate through the VRA Core.
+        foreach ($this->_vraElements as $elementName) {
+            if ($text = item('VRA Core', $elementName, array('all'=>true, 'no_escape'=>true))) {
+            	$nameParts = explode(' ', $elementName);
+            	$newName = strtolower($nameParts[0]) . $nameParts[1];
+            	$xml .= "\n" . '<' . $newName . 'Set>';
+            	foreach ($text as $k => $v) {
+					if (!empty($v)) {
+						$xml .= "\n" . '<' . $newName . '>';
+						if ($elementName == 'Inscription' || $elementName == 'Rights'){
+							$xml .= '<text>' . xml_escape($v) . '</text>';
+						}
+						elseif ($elementName == 'Location' || $elementName == 'Source' || $elementName == 'Textref' || $elementName == 'State Edition'){
+							$xml .= '<name>' . xml_escape($v) . '</name>';
+						}
+						elseif ($elementName == 'Subject'){
+							$xml .= '<term>' . xml_escape($v) . '</term>';
+						}
+						elseif ($elementName == 'Agent'){
+							$agent = $at->find($v);
+							$xml .= '<name>' . xml_escape($agent['name']) . '</name>';							
+							if ($agent['culture'] != NULL){
+								$xml .= '<culture>' . xml_escape($agent['culture']) . '</culture>';
+							}
+							if ($agent['earliest_date'] != NULL || $agent['latest_date'] != NULL){
+								$xml .= '<dates type="life">';
+								if ($agent['earliest_date'] != NULL){
+									$xml .= '<earliestDate>' . xml_escape($agent['earliest_date']) . '</earliestDate>';
+								}
+								if ($agent['latest_date'] != NULL){
+									$xml .= '<latestDate>' . xml_escape($agent['latest_date']) . '</latestDate>';
+								}
+								$xml .= '</dates>';
+							}
+							if ($agent['role'] != NULL){
+								$xml .= '<role>' . xml_escape($agent['role']) . '</role>';
+							}
+						}
+						elseif ($elementName == 'Date'){
+							$dates = explode(" ", xml_escape($v));
+							if ($dates[0] != NULL){
+								$xml .= '<earliestDate>' . $dates[0] . '</earliestDate>';
+							}
+							if ($dates[1] != NULL){
+								$xml .= '<latestDate>' . $dates[1] . '</latestDate>';
+							}
+							
+						}
+						else{
+							$xml .= xml_escape($v);
+						}
+						$xml .= '</' . $newName . '>';
+					}
+            	}
+            	$xml .= '</' . $newName . 'Set>';
+            }
+        }
+        $xml .= "\n" . '</work>';
+        return $xml; 
+}    
+
 //test to see if an item has any VRA Core element texts (used in after_save_item plugin hook as well as a public function
 function has_vra_core_element_texts($item){
 	$vraCoreElements = $item->getElementsBySetName('VRA Core');
