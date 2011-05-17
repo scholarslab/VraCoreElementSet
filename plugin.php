@@ -12,7 +12,7 @@
 
 add_plugin_hook('install', 'vra_core_install');
 add_plugin_hook('uninstall', 'vra_core_uninstall');
-add_plugin_hook('after_save_item', 'vra_core_after_save_item');
+add_plugin_hook('after_insert_item', 'vra_core_after_insert_item');
 add_plugin_hook('initialize', 'vra_core_initialize');
 add_plugin_hook('define_acl', 'vra_core_define_acl');
 add_plugin_hook('admin_theme_header', 'vra_core_admin_header');
@@ -176,7 +176,7 @@ function vra_core_uninstall()
 /**
  * Execute VRA Core to Dublin Core metadata crosswalk
  */
-function vra_core_after_save_item($item){
+function vra_core_after_insert_item($item){
 	$db = get_db();
 	
 	$vraCoreElements = $item->getElementsBySetName('VRA Core');
@@ -336,7 +336,7 @@ function render_vra_core_xml($item){
         return $xml; 
 }    
 
-//test to see if an item has any VRA Core element texts (used in after_save_item plugin hook as well as a public function
+//test to see if an item has any VRA Core element texts (used in after_insert_item plugin hook as well as a public function
 function has_vra_core_element_texts($item){
 	$vraCoreElements = $item->getElementsBySetName('VRA Core');
 	//test for existing VRA Core fields
