@@ -23,8 +23,8 @@ add_filter('define_response_contexts', 'vra_core_response_context');
 
 function vra_core_install()
 {
-	$db = get_db();
-    
+    $db = get_db();
+
     // create csv imports table
     $db->exec("CREATE TABLE IF NOT EXISTS `{$db->prefix}vra_core_element_set_agents` (
        `id` int(10) unsigned NOT NULL auto_increment,
@@ -36,13 +36,13 @@ function vra_core_install()
        PRIMARY KEY  (`id`)
        ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;");
 
-	$elementSetMetadata = array(
-		'name'        => 'VRA Core', 
-    	'description' => 'VRA Core standard for artistic pieces and cultural heritage artifacts'
-	);
-	$elements = array(
-		array(
-	    	'name'           => 'Title',
+    $elementSetMetadata = array(
+        'name'        => 'VRA Core', 
+        'description' => 'VRA Core standard for artistic pieces and cultural heritage artifacts'
+    );
+    $elements = array(
+        array(
+            'name'           => 'Title',
 	        'description'    => 'The title or identifying phrase given to a Work or an Image.',
 	        'record_type_id' => 2,
 	        'data_type_id'   => 2
