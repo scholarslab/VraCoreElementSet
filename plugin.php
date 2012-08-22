@@ -10,6 +10,28 @@
  * @author Ethan Gruber: ewg4x at virginia dot edu
  **/
 
+if (!defined('VRA_CORE_ELEMENT_SET_VERSION')) {
+    define('VRA_CORE_ELEMENT_SET_VERSION', get_plugin_ini('VraElementSet', 'version'));
+}
+
+if (!defined('VRA_CORE_ELEMENT_SET_PLUGIN_DIR')) {
+    define('VRA_CORE_ELEMENT_SET_PLUGIN_DIR', dirname(__FILE__));
+}
+
+require_once VRA_CORE_ELEMENT_SET_PLUGIN_DIR . 'VraElementSet.php';
+
+new VraElementSet();
+
+// TODO: refactor to VraElementSet
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * c-hanging-comment-ender-p: nil
+ * End:
+ */
+
 add_plugin_hook('install', 'vra_core_install');
 add_plugin_hook('uninstall', 'vra_core_uninstall');
 add_plugin_hook('after_insert_item', 'vra_core_after_insert_item');
